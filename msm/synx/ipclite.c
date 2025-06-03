@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
- * Copyright (c) 2024, Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2024-2025, Qualcomm Innovation Center, Inc. All rights reserved.
  */
 #define pr_fmt(fmt) "%s:%s: " fmt, KBUILD_MODNAME, __func__
 
@@ -1006,7 +1006,7 @@ static void ipcmem_init(struct ipclite_mem *ipcmem)
 	IPCLITE_OS_LOG(IPCLITE_DBG, "Ipcmem init completed\n");
 }
 
-
+#if  (KERNEL_VERSION(6, 1, 0) > LINUX_VERSION_CODE)
 /*Add VMIDs corresponding to EVA, CDSP and VPU to set IPCMEM access control*/
 static int set_ipcmem_access_control(struct ipclite_info *ipclite)
 {
@@ -1037,6 +1037,7 @@ static int set_ipcmem_access_control(struct ipclite_info *ipclite)
 
 	return ret;
 }
+#endif
 
 static int ipclite_channel_irq_init(struct device *parent, struct device_node *node,
 								struct ipclite_channel *channel)
@@ -1599,14 +1600,16 @@ static int ipclite_driver_restore(struct device *dev)
 
 	if (!hibernation_enabled) {
 		memset(ipclite->ipcmem.mem.virt_base, 0, ipclite->ipcmem.mem.size);
+		#if  (KERNEL_VERSION(6, 1, 0) > LINUX_VERSION_CODE)
 		ret = set_ipcmem_access_control(ipclite);
 		if (ret) {
 			dev_err(dev, "failed to setup ipclite mem\n");
 			return -EINVAL;
 		}
+		#endif
 	}
 
-	return 0;
+	return ret;
 }
 
 static const struct dev_pm_ops ipclite_hibernate_pm_ops = {
